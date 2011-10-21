@@ -1,0 +1,12 @@
+name: CodeBlocks
+main: com.zornchris.codeblocks.CodeBlocksPlugin
+version: 0.04
+depend: [Spout]
+
+permissions:
+    codeblocks.loadchallenge:
+        description: Allows you to load challenges using signs
+        default: op
+    codeblocks.run:
+        description: Allows you to run programs
+        default: op
