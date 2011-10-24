@@ -3,12 +3,16 @@ package com.zornchris.codeblocks.events;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
+import com.zornchris.codeblocks.challenges.Challenge;
+
 public class ChallengeEvent extends Event implements Cancellable {
 	protected static final long serialVersionUID = 1L;
 	protected boolean cancelled;
-	
-	public ChallengeEvent(String name) {
+	protected Challenge challenge;
+		
+	public ChallengeEvent(String name, Challenge challenge) {
 		super(name);
+	    this.challenge = challenge;
 	}
 
 	@Override

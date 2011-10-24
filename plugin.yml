@@ -3,6 +3,12 @@ main: com.zornchris.codeblocks.CodeBlocksPlugin
 version: 0.04
 depend: [Spout]
 
+commands:
+    cblocks:
+        description: Interact with CodeBlocks
+        permissions: codeblocks.cb
+        usage: /cblocks [command]
+
 permissions:
     codeblocks.loadchallenge:
         description: Allows you to load challenges using signs

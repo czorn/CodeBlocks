@@ -5,24 +5,20 @@ import java.util.Stack;
 
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.material.Wool;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Dispenser;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.CustomEventListener;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event.Type;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
-
 import com.zornchris.codeblocks.challenges.Challenge;
+import com.zornchris.codeblocks.events.ChallengeCompleteEvent;
 import com.zornchris.codeblocks.events.RobotExplodeEvent;
+import com.zornchris.codeblocks.events.RobotStartEvent;
 
 /* Process:
  * Need to update
@@ -37,6 +33,7 @@ public class Program
 
 	public Player player;
     public Block startBlock;
+    public Block robotStartingLocation;
     public Challenge challenge;
 	
 	private Robot robot = null;		// The Robot Object
@@ -49,7 +46,7 @@ public class Program
 	
 	private Block lastPC;
 	private Material lastPCMaterial;
-	private boolean showPC = true;
+	private boolean showPC = false;
 	private boolean isRunning = false;
 	
 	// The directions aren't in order by increasing value, so I've put them in order
@@ -66,19 +63,27 @@ public class Program
 	private HashMap<String, FuncBlock> functionBlocks;	// Key = Material Types as a String, Value = Struct containing blocks
 	
 	
-	public Program(Block start, Plugin plugin)//, PluginManager pm)
+	/*public Program(Plugin plugin, Block start)//, PluginManager pm)
 	{
 		this.plugin = plugin;
 		startBlock = start;
+		robotStartingLocation = startBlock.getRelative(BlockFace.NORTH).getRelative(BlockFace.NORTH).getRelative(BlockFace.NORTH).getRelative(BlockFace.DOWN);
 		plugin.getServer().getPluginManager().registerEvent(Type.CUSTOM_EVENT, new RobotCustomListener(), Priority.Normal, plugin);
-	}
+		System.out.println("Program without challenge");
+	}*/
 	
-	public Program(Plugin plugin, Challenge c)//, PluginManager pm)
+	public Program(Plugin plugin, Block start, Challenge c)//, PluginManager pm)
     {
         this.plugin = plugin;
+        startBlock = start;
         challenge = c;
-        startBlock = c.getStartBlock();
+        if(c != null) {
+            robotStartingLocation = c.getRobotStartLocation();
+        }
+        else
+            robotStartingLocation = startBlock.getRelative(BlockFace.NORTH).getRelative(BlockFace.NORTH).getRelative(BlockFace.NORTH).getRelative(BlockFace.DOWN);
         plugin.getServer().getPluginManager().registerEvent(Type.CUSTOM_EVENT, new RobotCustomListener(), Priority.Normal, plugin);
+        System.out.println("Program with challenge");
     }
 
 	/**
@@ -132,19 +137,22 @@ public class Program
 		functionCalls = new Stack<Block>();
 		
 		// Reset the robot if it's already running
-		if(robot != null) {
+		if(robot != null && robot.blockIsRobot()) {
 			robot.clear();
+			robot.moveTo(robotStartingLocation);
 		}
+		else
+		    robot = new Robot(this, plugin, robotStartingLocation);
+		
 		if(taskId != -1)
 			plugin.getServer().getScheduler().cancelTask(taskId);
 		
 		// Determine the speed of the program
 		evaluateProgramParameters(startBlock);
 		
-		// Start the robot
-		robot = new Robot(plugin, startBlock.getRelative(BlockFace.NORTH).getRelative(BlockFace.NORTH).getRelative(BlockFace.NORTH).getRelative(BlockFace.DOWN));
-		
 		taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+		
+		plugin.getServer().getPluginManager().callEvent(new RobotStartEvent(this));
 	}
 	
 	/**
@@ -160,15 +168,17 @@ public class Program
 			lastPC.setType(lastPCMaterial);
 			
 			// Save this block's material
-			lastPCMaterial = programCounter.getType();
+			lastPCMaterial = Material.GOLD_BLOCK;//programCounter.getType();
 			lastPC = programCounter;
 		}
 		
 		switch(blockType)
 		{
 			case INSTRUCTION_BLOCK:
-				programCounter.setType(Material.WOOL);
-				programCounter.setData(DyeColor.MAGENTA.getData());
+			    if(showPC) {
+    				programCounter.setType(Material.WOOL);
+    				programCounter.setData(DyeColor.MAGENTA.getData());
+			    }
 				processInstruction(b);
 				break;
 				
@@ -176,7 +186,7 @@ public class Program
 				functionCalls.push(b);		// Add the location to the stack
 				FuncBlock fb = functionBlocks.get( convertBlockToFunctionKey(b) );
 				if( fb != null ) {
-					programCounter.setType(Material.WOOL);
+					//programCounter.setType(Material.WOOL);
 					programCounter = fb.getFirstInstructionBlock();
 					evaluateBlock( programCounter );
 				}
@@ -247,6 +257,9 @@ public class Program
 			else if(cmd.equalsIgnoreCase("defuse")) {
 				robot.defuse();
 			}
+			else if(cmd.equalsIgnoreCase("harvest")) {
+                robot.harvest();
+            }
 			else {
 				// If we're branching, moving the program counter requires
 				// extra work
@@ -407,20 +420,6 @@ public class Program
 		else
 			return FUNCTION_BLOCK;
     }
-	
-	/*
-	 * Print to the console the stack of blocks representing
-	 * function calls.
-	 */
-	public void displayStack()
-	{
-		// System.out.print("[ ");
-		for(int i =0; i< functionCalls.size();i++)
-		{
-		// System.out.print( functionCalls.get(i).getType() + ", " );
-		} 
-		// System.out.println("]");
-	}
 
 	/*
      * Helper method for checking if the block
@@ -445,7 +444,17 @@ public class Program
     {
     	@Override
 		public void run() {
-			evaluateBlock(programCounter);
+    	    if(challenge != null) {
+    	        if(!challenge.isComplete(robot)) {
+    	            evaluateBlock(programCounter);
+    	        }
+    	        else {
+    	            System.out.println("[CodeBlocks] Challenge Completed");
+    	            plugin.getServer().getPluginManager().callEvent(new ChallengeCompleteEvent(challenge));
+    	        }
+    	    }
+    	    else
+    	        evaluateBlock(programCounter); 
 		}
     }
     
@@ -497,5 +506,11 @@ public class Program
     			stop();
     		}
     	}
+    }
+    public void givePlayerCrops(Player p) {
+        int numWheat = robot.popWheat();
+        p.sendMessage("[CodeBlocks] This robot has harvested " + numWheat + " wheat(s) for you.");
+        if(numWheat > 0)
+            p.getInventory().addItem(new ItemStack(Material.WHEAT, numWheat));        
     }
 }

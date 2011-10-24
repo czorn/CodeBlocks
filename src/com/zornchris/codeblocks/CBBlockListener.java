@@ -6,7 +6,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.SignChangeEvent;
-import com.zornchris.codeblocks.challenges.ChallengeController;
 import com.zornchris.codeblocks.robot.Program;
 
 public class CBBlockListener extends BlockListener {
@@ -25,7 +24,7 @@ public class CBBlockListener extends BlockListener {
 		Program.setupBranchBlocks(b, event.getLine(0));
 		
 		if(p.hasPermission("codeblocks.loadchallenge"))
-		    plugin.challengeController.createChallenge(b, event.getLines(), p);
+		    plugin.challengeController.createChallenge(b, event.getLines());
 	}
 	
 	@Override

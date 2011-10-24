@@ -1,11 +1,8 @@
 package com.zornchris.codeblocks.robot;
 
-import java.util.HashMap;
-import java.util.Stack;
+import java.util.Random;
 
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.material.Wool;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Dispenser;
@@ -17,18 +14,20 @@ import com.zornchris.codeblocks.events.RobotExplodeEvent;
 
 public class Robot {
 	private Plugin plugin;
-	
+	private Program program;
 	private Block robot;	// The dispenser Block that represents the Robot
 	private Block sign;		// The sign on the Robot indicating the
 							// facing direction
 	private int facingDirIndex;
+	private int wheatHarvested = 0;
 	
 	public static final Material ROBOT_MATERIAL = Material.DISPENSER;
 	public static final Material ROBOT_DIRECTION_MATERIAL = Material.SIGN_POST;
 	
-	public Robot(Plugin plugin, Block robot) {
+	public Robot(Program program, Plugin plugin, Block robot) {
 		this.plugin = plugin;
 		this.robot = robot;
+		this.program = program;
 		robot.setType(ROBOT_MATERIAL);	// Create the Robot
 		
 		facingDirIndex = 1;
@@ -132,15 +131,35 @@ public class Robot {
 	 * a TNT Block.
 	 */
 	public void defuse() {
-		Block inFront = robot.getRelative(Program.BLOCKFACE_DIRS[facingDirIndex]);
+		Block inFront = getBlockInFront();
 		
 		if(inFront.getType() == Material.TNT)
 			inFront.setType(Material.AIR);
 	}
 	
+	public void harvest() {
+	    Block inFront = getBlockInFront();
+	    // If the block is growing wheat
+	    if(inFront.getType() == Material.CROPS) {
+	        // If the wheat is fully grown
+	        if(inFront.getData() == (byte) 7) {
+	            inFront.setData((byte) 0);
+	            
+	            // Harvest 1-3 wheat
+	            Random rand = new Random();
+	            wheatHarvested += rand.nextInt(3) + 1;
+	        }
+	    }
+	    //updateCropsInDispenser();
+	}
+	
 /**************************
  * SHORT HELPER FUNCTIONS *
  **************************/
+	
+	public Block getBlockInFront() {
+	    return robot.getRelative(Program.BLOCKFACE_DIRS[facingDirIndex]);
+	}
 	
 	/**
 	 * Removes the robot from its current location
@@ -167,7 +186,7 @@ public class Robot {
 	 */
 	public void explode() {
 		System.out.println("exploding");
-		plugin.getServer().getPluginManager().callEvent(new RobotExplodeEvent());
+		plugin.getServer().getPluginManager().callEvent(new RobotExplodeEvent(program));
 	}
 	
 	/**
@@ -183,6 +202,32 @@ public class Robot {
 			sign.setData((byte) ((facingDirIndex % 4) * 4));
 			((Sign) sign.getState()).setLine(1, "FRONT");
 		}
+	}
+	
+	/**
+	 * Adds all of the wheat the robot has harvested to its
+	 * dispenser inventory. This should only be called when
+	 * the robot is stopped, to prevent the player from ?
+	 */
+	public void updateCropsInDispenser() {
+	    Dispenser d = (Dispenser)robot.getState();
+        Inventory inv = d.getInventory();
+        inv.clear();
+        inv.addItem(new ItemStack(Material.WHEAT, wheatHarvested));
+	}
+	
+	public boolean isOccupyingBlock(Block b) {
+        return robot.equals(b);
+    }
+
+	public boolean blockIsRobot() {
+        return robot.getType() == ROBOT_MATERIAL;
+    }
+	
+	public int popWheat() {
+	    int x = wheatHarvested;
+	    wheatHarvested = 0;
+	    return x;
 	}
 	
 }

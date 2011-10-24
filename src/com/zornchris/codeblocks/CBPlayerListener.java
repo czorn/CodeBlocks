@@ -7,9 +7,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
+import org.bukkit.material.Button;
 import org.bukkit.material.Lever;
-import org.bukkit.plugin.PluginManager;
-
 import com.zornchris.codeblocks.challenges.ChallengeController;
 import com.zornchris.codeblocks.robot.Program;
 
@@ -35,12 +34,21 @@ public class CBPlayerListener extends PlayerListener {
     	// If the player right or left clicks a switch, start it
     	if( b.getType() == Material.LEVER ) {
     		Lever lever = (Lever) (b.getState().getData());
-    		Block buttonIsSittingOn = b.getRelative(lever.getAttachedFace());
-    		if( Program.isStartBlock(buttonIsSittingOn) ) {
+    		Block leverIsSittingOn = b.getRelative(lever.getAttachedFace());
+    		if( Program.isStartBlock(leverIsSittingOn) ) {
     		    if(p.hasPermission("codeblocks.run"))
-    		        plugin.programController.programInteraction(buttonIsSittingOn, lever.isPowered());
+    		        plugin.programController.programInteraction(leverIsSittingOn, lever.isPowered());
     		}
     	}
+    	
+    	else if( b.getType() == Material.STONE_BUTTON) {
+    	    Button button = (Button) (b.getState().getData());
+    	    Block buttonIsSittingOn = b.getRelative(button.getAttachedFace());
+    	    Program prog = plugin.programController.getProgram(buttonIsSittingOn);
+    	    if(prog != null)
+    	        prog.givePlayerCrops(p);
+    	}
+    	
     	// If the player right clicks any other blocks
     	if( event.getAction() == Action.RIGHT_CLICK_BLOCK )
     		this.handleUseInteraction(b, p);

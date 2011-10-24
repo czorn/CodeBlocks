@@ -5,8 +5,6 @@ import java.util.HashMap;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 
-import com.zornchris.codeblocks.challenges.Challenge;
-
 public class ProgramController {
 
     private Plugin plugin;
@@ -20,15 +18,21 @@ public class ProgramController {
         Program p = programs.get(start);
         
         if(p == null) {
-            p = new Program(start, plugin);
-            programs.put(start, p);
+            p = new Program(plugin, start, null);
+            addNewProgram(start, p);
         }
         
         p.startStop(leverState);
     }
     
     public void addNewProgram(Block start, Program p) {
+        System.out.println(start.getLocation());
         programs.put(start, p);
+    }
+
+    public Program getProgram(Block b) {
+        System.out.println(b.getLocation());
+        return programs.get(b);
     }
     
 }

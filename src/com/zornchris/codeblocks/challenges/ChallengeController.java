@@ -4,8 +4,6 @@ import java.util.HashMap;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-
 import com.zornchris.codeblocks.CodeBlocksPlugin;
 import com.zornchris.codeblocks.robot.Program;
 
@@ -17,18 +15,18 @@ public class ChallengeController {
 	    plugin = p;
 	}
 	
-	public void createChallenge(Block b, String[] lines, Player p) {
+	public void createChallenge(Block b, String[] lines) {
 		if(isChallengeSign(lines[0])) {
-		    Challenge c = new TextBasedChallenge(b, lines[1], p);
+		    Challenge c = new TextBasedChallenge(plugin, b, lines[1]);
 			challenges.put(b, c);
-		    plugin.linkChallengeAndProgram(c, new Program(c.startBlock, plugin));
+		    plugin.linkChallengeAndProgram(c, new Program(plugin, c.startBlock, c));
 		}
 	}
 	
 	public void resetChallenge(Block b, String[] lines, Player p) {
 		Challenge c = challenges.get(b);
 		if(c == null)
-			createChallenge(b, lines, p);
+			createChallenge(b, lines);
 		else
 			c.reset();
 	}

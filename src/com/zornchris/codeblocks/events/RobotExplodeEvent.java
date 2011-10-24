@@ -1,5 +1,7 @@
 package com.zornchris.codeblocks.events;
 
+import com.zornchris.codeblocks.robot.Program;
+
 /*
  * http://forums.bukkit.org/threads/example-of-custom-events.32376/
  */
@@ -7,11 +9,7 @@ package com.zornchris.codeblocks.events;
 public class RobotExplodeEvent extends RobotEvent  {
 	private static final long serialVersionUID = 1L;
 	
-    public RobotExplodeEvent() {
-    	super("RobotExplodeEvent");
-    }
-    
-    public RobotExplodeEvent(String name) {
-        super(name);
+    public RobotExplodeEvent(Program program) {
+    	super("RobotExplodeEvent", program);
     }
 }

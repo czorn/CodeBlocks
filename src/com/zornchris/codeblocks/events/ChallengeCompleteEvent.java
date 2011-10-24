@@ -1,5 +1,7 @@
 package com.zornchris.codeblocks.events;
 
+import com.zornchris.codeblocks.challenges.Challenge;
+
 /*
  * http://forums.bukkit.org/threads/example-of-custom-events.32376/
  */
@@ -7,11 +9,7 @@ package com.zornchris.codeblocks.events;
 public class ChallengeCompleteEvent extends ChallengeEvent  {
 	private static final long serialVersionUID = 1L;
 	
-    public ChallengeCompleteEvent() {
-    	super("ChallengeCompleteEvent");
-    }
-    
-    public ChallengeCompleteEvent(String name) {
-        super(name);
+    public ChallengeCompleteEvent(Challenge challenge) {
+    	super("ChallengeCompleteEvent", challenge);
     }
 }
