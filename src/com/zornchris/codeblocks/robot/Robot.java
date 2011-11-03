@@ -117,13 +117,15 @@ public class Robot {
 	 */
 	public void destroy() {
 		Block inFront = robot.getRelative(Program.BLOCKFACE_DIRS[facingDirIndex]);
+		Material type = inFront.getType();
 		
-		if(inFront.getType() == Material.DIRT || inFront.getType() == Material.GRASS
-				|| inFront.getType() == Material.TNT)
+		if(type == Material.DIRT || type == Material.GRASS)
 			inFront.setType(Material.AIR);
 		
-		if(inFront.getType() == Material.TNT)
+		if(type == Material.TNT) {
+		    inFront.setType(Material.AIR);
 			explode();
+		}
 	}
 	
 	/**
@@ -200,7 +202,7 @@ public class Robot {
 		if( sign.getType() ==  Material.AIR) {
 			sign.setType(ROBOT_DIRECTION_MATERIAL);
 			sign.setData((byte) ((facingDirIndex % 4) * 4));
-			((Sign) sign.getState()).setLine(1, "FRONT");
+			((Sign) sign.getState()).setLine(1, "ROBOT FRONT");
 		}
 	}
 	
@@ -228,6 +230,11 @@ public class Robot {
 	    int x = wheatHarvested;
 	    wheatHarvested = 0;
 	    return x;
+	}
+	
+	public void reset() {
+	    clear();
+	    facingDirIndex = 1;
 	}
 	
 }

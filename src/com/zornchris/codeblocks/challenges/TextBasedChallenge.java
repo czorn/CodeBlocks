@@ -11,7 +11,9 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.plugin.Plugin;
 
 import com.zornchris.codeblocks.events.ChallengeLoadEvent;
+import com.zornchris.codeblocks.robot.Program;
 import com.zornchris.codeblocks.robot.Robot;
+import com.zornchris.codeblocks.robot.TextProgram;
 
 public class TextBasedChallenge extends Challenge {
 	
@@ -22,7 +24,7 @@ public class TextBasedChallenge extends Challenge {
 	public static final int DESTROY = 1;
 	private ArrayList<Goal> goals = new ArrayList<Goal>();
 	
-	public TextBasedChallenge(Plugin plugin, Block sign, String name) {
+	public TextBasedChallenge(Plugin plugin, Block sign, String name, String fileName) {
 		this.plugin = plugin;
 	    this.sign = sign;
 		
@@ -41,9 +43,14 @@ public class TextBasedChallenge extends Challenge {
 		setRobotDirection(lines.remove(0));
 		blockLocations = lines;
 		
-		startBlock = createStartBlock(sign.getRelative(BlockFace.SOUTH)
-                .getRelative(BlockFace.SOUTH).getRelative(BlockFace.EAST)
-                .getRelative(BlockFace.EAST));
+		if(fileName.length() > 0)
+		    startBlock = TextProgram.createStartBlock(sign.getRelative(BlockFace.SOUTH)
+                    .getRelative(BlockFace.SOUTH).getRelative(BlockFace.EAST)
+                    .getRelative(BlockFace.EAST), fileName);
+		else
+    		startBlock = Program.createStartBlock(sign.getRelative(BlockFace.SOUTH)
+                    .getRelative(BlockFace.SOUTH).getRelative(BlockFace.EAST)
+                    .getRelative(BlockFace.EAST));
 		
 		generateBlocks(blockLocations);
 	}
@@ -65,17 +72,17 @@ public class TextBasedChallenge extends Challenge {
 	@Override
 	public boolean isComplete(Robot robot) {
 	    for(Goal g : goals) {
-	        System.out.println("Checking Goal");
+	        //System.out.println("Checking Goal");
 	        switch(g.type) {
 	            case MOVE_TO:
-	                System.out.println("Checking Move To");
+	                //System.out.println("Checking Move To");
 	                if(!robot.isOccupyingBlock(robotGoalLocation))
 	                    return false;
 	                break;
 	            
 	            case DESTROY:
 	                for(Block b : blocksToDestroy) {
-	                    System.out.println("Checking for destroyed block");
+	                    //System.out.println("Checking for destroyed block");
 	                    if(b.getType() != Material.AIR)
 	                        return false;
 	                }
@@ -134,11 +141,16 @@ public class TextBasedChallenge extends Challenge {
 				}
 				
 				// Setup the stack of blocks for this X,Z location
-				currentBlock.setType(blockType);
 				currentBlock.getRelative(BlockFace.DOWN).getRelative(BlockFace.DOWN).setType(Material.DIRT);
-				currentBlock.getRelative(BlockFace.DOWN).setType(Material.SAND);
+				if(blockChar == 'r') {
+				    currentBlock.getRelative(BlockFace.DOWN).setType(Material.WOOL);
+				    currentBlock.getRelative(BlockFace.DOWN).setData(Program.ROBOT_START_DATA);
+				}
+				else
+				    currentBlock.getRelative(BlockFace.DOWN).setType(Material.SAND);
 				currentBlock.getRelative(BlockFace.UP).setType(Material.AIR);
 				currentBlock.getRelative(BlockFace.UP).getRelative(BlockFace.UP).setType(Material.AIR);
+				currentBlock.setType(blockType);
 				currentBlock = currentBlock.getRelative(BlockFace.EAST);
 			}
 			rowStartBlock = rowStartBlock.getRelative(BlockFace.NORTH);

@@ -1,6 +1,6 @@
 name: CodeBlocks
 main: com.zornchris.codeblocks.CodeBlocksPlugin
-version: 0.04
+version: 0.05
 depend: [Spout]
 
 commands:

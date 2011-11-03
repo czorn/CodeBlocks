@@ -11,6 +11,7 @@ import org.bukkit.material.Button;
 import org.bukkit.material.Lever;
 import com.zornchris.codeblocks.challenges.ChallengeController;
 import com.zornchris.codeblocks.robot.Program;
+import com.zornchris.codeblocks.robot.ProgramController;
 
 public class CBPlayerListener extends PlayerListener {
     private final CodeBlocksPlugin plugin;
@@ -23,9 +24,12 @@ public class CBPlayerListener extends PlayerListener {
     /* Called when players left or right click
      * on blocks
      */
+    @Override
     public void onPlayerInteract(PlayerInteractEvent event)
     {
-    	Block b = event.getClickedBlock();
+    	super.onPlayerInteract(event);
+    	
+        Block b = event.getClickedBlock();
     	Player p = event.getPlayer();
     	
     	if(b == null)
@@ -35,10 +39,15 @@ public class CBPlayerListener extends PlayerListener {
     	if( b.getType() == Material.LEVER ) {
     		Lever lever = (Lever) (b.getState().getData());
     		Block leverIsSittingOn = b.getRelative(lever.getAttachedFace());
-    		if( Program.isStartBlock(leverIsSittingOn) ) {
+    		
+    		if( ProgramController.isStartBlock(leverIsSittingOn) ) {
     		    if(p.hasPermission("codeblocks.run"))
-    		        plugin.programController.programInteraction(leverIsSittingOn, lever.isPowered());
+    		        plugin.programController.programInteraction(p, leverIsSittingOn, lever.isPowered());
     		}
+    		if( ProgramController.isTextProgramStartBlock(leverIsSittingOn) ) {
+                if(p.hasPermission("codeblocks.run"))
+                    plugin.programController.programInteraction(p, leverIsSittingOn, lever.isPowered());
+            }
     	}
     	
     	else if( b.getType() == Material.STONE_BUTTON) {
@@ -61,8 +70,10 @@ public class CBPlayerListener extends PlayerListener {
     		Sign sign = (Sign) b.getState();
     		
     		if(ChallengeController.isChallengeSign(sign.getLine(0))) {
-    		    if(p.hasPermission("codeblocks.loadchallenge"))
+    		    if(p.hasPermission("codeblocks.loadchallenge")) {
     		        plugin.challengeController.resetChallenge(b, sign.getLines(), p);
+    		        p.sendMessage("[CodeBlocks] Reset Challenge");
+    		    }
     		}
     	}
     }
