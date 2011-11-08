@@ -32,7 +32,6 @@ public class Program
 	
 	public static final Material ROBOT_DIRECTION_MATERIAL = Material.SIGN_POST;
 
-	public Player player;
     public Block startBlock;
     public Block robotStartingLocation;
     public Challenge challenge;
@@ -112,7 +111,7 @@ public class Program
 			start();
 		
 		else if (!leverIsOn && isRunning) {
-		    plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, 
+		    plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, 
 		            new Runnable() 
 		            { 
 		                @Override
@@ -159,6 +158,10 @@ public class Program
 		// Reset the stack trace
 		functionCalls = new Stack<Block>();
 		
+		// Has the starting location changed?
+		if(challenge != null)
+		    robotStartingLocation = challenge.getRobotStartLocation();
+		
 		// Reset the robot if it's already running
 		if(robot != null && robot.blockIsRobot()) {
 			robot.reset();
@@ -173,7 +176,7 @@ public class Program
 		// Determine the speed of the program
 		evaluateProgramParameters(startBlock);
 		
-		taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+		taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
 		
 		plugin.getServer().getPluginManager().callEvent(new RobotStartEvent(this));
 	}
@@ -201,10 +204,14 @@ public class Program
     				if( fb != null ) {
     					//programCounter.setType(Material.WOOL);
     				    showPCIndicator();
-    				    taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+    				    taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
     					programCounter = fb.getFirstInstructionBlock();
     					//evaluateBlock( programCounter );
     				}
+			    }
+			    else {
+			        lastPlayer.sendMessage("[CodeBlocks] Stack Overflow - Result of infinite recursion. Please check your blocks.");
+			        stop();
 			    }
 				break;
 				
@@ -293,13 +300,13 @@ public class Program
 		    }
 			
 		    if(isRunning)
-		    	taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+		    	taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
 			return;
 		}
 		
 		incrementProgramCounter();
 		if(isRunning)
-			taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+			taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
 			
 	}
 	
@@ -371,10 +378,18 @@ public class Program
 			ifBlock.setType(Material.WOOL);
 			ifBlock.setData(POS_BRANCH_DATA);
 			
+			ifBlock = ifBlock.getRelative(BlockFace.SOUTH);
+            ifBlock.setType(Material.WOOL);
+            ifBlock.setData(POS_BRANCH_DATA);
+			
 			Block elseBlock = b.getRelative(BlockFace.EAST)
 				.getRelative(BlockFace.DOWN);
 			elseBlock.setType(Material.WOOL);
 			elseBlock.setData(NEG_BRANCH_DATA);
+			
+			elseBlock = elseBlock.getRelative(BlockFace.SOUTH);
+            elseBlock.setType(Material.WOOL);
+            elseBlock.setData(NEG_BRANCH_DATA);
 		}
 	}
 	
@@ -467,7 +482,7 @@ public class Program
 	    
 	    for(i = 0; i < 4; i++) {
 	        l = startBlock.getRelative(BLOCKFACE_DIRS[i]);
-	        System.out.println(l.getType());
+	        //System.out.println(l.getType());
 	        if(l.getType() == Material.LEVER)
 	            break;
 	    }
@@ -484,7 +499,7 @@ public class Program
 	    if(currentValue - 8 >= 0)
 	        currentValue -= 8; 
 	    
-	    System.out.println("Setting state to: " + (currentValue + value));
+	    //System.out.println("Setting state to: " + (currentValue + value));
 	    l.setData((byte) (currentValue + value));
 	    //l.setData((byte) (2));
 	    Lever lever = (Lever)(l.getState().getData());
@@ -510,7 +525,7 @@ public class Program
         return returnBlock;
     }
 
-	
+	public Player getPlayer() { return lastPlayer; }
 
     /*
      * The task that gets called after a delay in order to read and
@@ -521,7 +536,7 @@ public class Program
     {
     	@Override
 		public void run() {
-    	    System.out.println("task");
+    	    //System.out.println("task");
     	    if(challenge != null) {
     	        if(!challenge.isComplete(robot)) {
     	            evaluateBlock(programCounter);
@@ -529,6 +544,7 @@ public class Program
     	        else {
     	            //System.out.println("[CodeBlocks] Challenge Completed");
     	            lastPlayer.sendMessage("[CodeBlocks] Challenge Completed");
+    	            stop();
     	            plugin.getServer().getPluginManager().callEvent(new ChallengeCompleteEvent(challenge));
     	        }
     	    }

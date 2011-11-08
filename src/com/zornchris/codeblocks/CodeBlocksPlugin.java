@@ -2,6 +2,9 @@ package com.zornchris.codeblocks;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Logger;
+
+import moc.MOCDBLib.MOCDBLib;
 
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -25,8 +28,11 @@ import com.zornchris.codeblocks.robot.ProgramController;
 public class CodeBlocksPlugin extends JavaPlugin {
     private CBPlayerListener playerListener;
     private CBBlockListener blockListener;
+    private CBCustomListener customListener;
+    
     public ChallengeController challengeController;
     public ProgramController programController;
+    public DBHelper dbh;
 
     public void onDisable() {
        System.out.println("[CodeBlocks] Plugin Disabled");
@@ -38,12 +44,17 @@ public class CodeBlocksPlugin extends JavaPlugin {
     	
     	playerListener = new CBPlayerListener(this);
         blockListener = new CBBlockListener(this);
+        customListener = new CBCustomListener(this);
+        
     	
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvent(Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
         pm.registerEvent(Type.SIGN_CHANGE, blockListener, Priority.Normal, this);
         pm.registerEvent(Type.BLOCK_BREAK, blockListener, Priority.Normal, this);
         pm.registerEvent(Type.BLOCK_PLACE, blockListener, Priority.Normal, this);
+        pm.registerEvent(Type.CUSTOM_EVENT, customListener, Priority.Normal, this);
+        
+        dbh = new DBHelper((MOCDBLib) pm.getPlugin("MOCDBLib"), this);
         
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println( "[CodeBlocks] " + pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!" );
@@ -102,19 +113,22 @@ public class CodeBlocksPlugin extends JavaPlugin {
     public static void duplicateWorldFiles(String fromWorld, String toWorld) {
         Runtime rt = Runtime.getRuntime();
         Process p = null;
+        System.out.println(fromWorld + " " + toWorld);
         
         try
         {
-            File dir = new File(fromWorld);
+            File dir = new File(toWorld);
             
             if(!dir.exists()) {
-                p = rt.exec( "cp -r " + fromWorld + " " + toWorld);
+                p = rt.exec( "cp -r " + fromWorld + " " + toWorld );
+                //System.out.println("cp -r " + fromWorld + " " + toWorld);
                 
                 try {
                     Thread.sleep(750);
                 } catch (InterruptedException e) { e.printStackTrace(); }
                 
                 p = rt.exec( "rm " + toWorld + "/uid.dat" );
+                //System.out.println("rm " + toWorld + "/uid.dat");
             }
         }
         catch ( IOException ioe )

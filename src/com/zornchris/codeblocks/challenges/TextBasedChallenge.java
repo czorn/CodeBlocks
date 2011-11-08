@@ -1,6 +1,7 @@
 package com.zornchris.codeblocks.challenges;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +9,7 @@ import java.io.FileNotFoundException;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import com.zornchris.codeblocks.events.ChallengeLoadEvent;
@@ -23,26 +25,19 @@ public class TextBasedChallenge extends Challenge {
 	public static final int MOVE_TO = 0;
 	public static final int DESTROY = 1;
 	private ArrayList<Goal> goals = new ArrayList<Goal>();
+	private int currentVersion = 0;
+	private Random rand = new Random();
+	private String name;
 	
-	public TextBasedChallenge(Plugin plugin, Block sign, String name, String fileName) {
+	public TextBasedChallenge(Plugin plugin, Player player, Block sign, String name, String fileName) {
 		this.plugin = plugin;
 	    this.sign = sign;
+	    this.name = name;
+	    this.player = player;
 		
-		File f = new File("plugins/CodeBlocks/Challenges/" + name + ".txt");
-		ArrayList<String> lines = new ArrayList<String>();
+	    loadFile(name);
 		
-		try {
-			Scanner scn = new Scanner(f);
-			while(scn.hasNextLine())
-				lines.add(scn.nextLine());
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		generateConditions(lines.remove(0));
-		setRobotDirection(lines.remove(0));
-		blockLocations = lines;
-		
+		// Is this challenge being run by a text file?
 		if(fileName.length() > 0)
 		    startBlock = TextProgram.createStartBlock(sign.getRelative(BlockFace.SOUTH)
                     .getRelative(BlockFace.SOUTH).getRelative(BlockFace.EAST)
@@ -53,6 +48,23 @@ public class TextBasedChallenge extends Challenge {
                     .getRelative(BlockFace.EAST));
 		
 		generateBlocks(blockLocations);
+	}
+	
+	private void loadFile(String name) {
+	    File f = new File("plugins/CodeBlocks/Challenges/" + name + ".txt");
+        ArrayList<String> lines = new ArrayList<String>();
+        
+        try {
+            Scanner scn = new Scanner(f);
+            while(scn.hasNextLine())
+                lines.add(scn.nextLine());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        generateConditions(lines.remove(0));
+        setRobotDirection(lines.remove(0));
+        blockLocations = lines;
 	}
 	
 	public void generateConditions(String s) {
@@ -114,7 +126,9 @@ public class TextBasedChallenge extends Challenge {
 					    robotStartLocation = currentBlock;
 					case 'z':
 					    robotGoalLocation = currentBlock;
+					case 'b':
 					case 'x':
+					case '.':
 						blockType = Material.AIR;
 						break;
 					case 'd':
@@ -128,6 +142,10 @@ public class TextBasedChallenge extends Challenge {
 						break;
 					case 's':
 						blockType = Material.STONE;
+						break;
+					case 'w':
+					    blockType = Material.CROPS;
+					    break;
 				}
 				
 				// Keep track of which blocks need to be destroyed
@@ -146,11 +164,18 @@ public class TextBasedChallenge extends Challenge {
 				    currentBlock.getRelative(BlockFace.DOWN).setType(Material.WOOL);
 				    currentBlock.getRelative(BlockFace.DOWN).setData(Program.ROBOT_START_DATA);
 				}
+				else if(blockChar == 'b') {
+				    currentBlock.getRelative(BlockFace.DOWN).setType(Material.WATER);
+				}
+				else if(blockChar == 'w')
+				    currentBlock.getRelative(BlockFace.DOWN).setType(Material.SOIL);
 				else
 				    currentBlock.getRelative(BlockFace.DOWN).setType(Material.SAND);
 				currentBlock.getRelative(BlockFace.UP).setType(Material.AIR);
 				currentBlock.getRelative(BlockFace.UP).getRelative(BlockFace.UP).setType(Material.AIR);
 				currentBlock.setType(blockType);
+				if(blockType == Material.CROPS)
+				    currentBlock.setData((byte) 7);
 				currentBlock = currentBlock.getRelative(BlockFace.EAST);
 			}
 			rowStartBlock = rowStartBlock.getRelative(BlockFace.NORTH);
@@ -164,6 +189,17 @@ public class TextBasedChallenge extends Challenge {
 	
 	@Override
 	public void reset() {
+	    //int nextVersion = (int)(rand.nextDouble() * 3);
+	    currentVersion = (currentVersion + 1) % 3;
+	    String fileName = name + "-" + currentVersion;
+	    System.out.println(fileName);
+	    File f = new File("plugins/CodeBlocks/Challenges/" + fileName + ".txt");
+	    
+	    if(f.exists())
+	        loadFile(fileName);
+	    else
+	        loadFile(name);
+	    
 		generateBlocks(blockLocations);
 	}
 	

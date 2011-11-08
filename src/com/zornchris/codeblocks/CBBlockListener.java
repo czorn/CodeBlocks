@@ -31,7 +31,7 @@ public class CBBlockListener extends BlockListener {
 		//Program.setupBranchBlocks(b, event.getLine(0));
 		
 		if(p.hasPermission("codeblocks.loadchallenge"))
-		    plugin.challengeController.createChallenge(b, event.getLines());
+		    plugin.challengeController.createChallenge(b, event.getLines(), p);
 	}
 	
 	@Override

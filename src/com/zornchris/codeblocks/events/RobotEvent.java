@@ -20,6 +20,8 @@ public class RobotEvent extends Event implements Cancellable {
 	@Override
 	public boolean isCancelled() { return cancelled; }
 	
+	public Program getProgram() { return program; }
+	
 	//public String getText() { return text; }
     //public void setText(String text) { this.text = text; }
 }

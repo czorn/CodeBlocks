@@ -208,7 +208,7 @@ public class TextProgram extends Program {
         if(taskId != -1)
             plugin.getServer().getScheduler().cancelTask(taskId);
         
-        taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+        taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
         
         plugin.getServer().getPluginManager().callEvent(new RobotStartEvent(this));
     }
@@ -292,7 +292,7 @@ public class TextProgram extends Program {
         if(!(b instanceof BranchingBlock))
             programCounter = b.next;
         if(isRunning)
-            taskId = plugin.getServer().getScheduler().scheduleAsyncDelayedTask(plugin, task, speed);
+            taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
         
         //System.out.println("New PC: " + programCounter.type);
     }

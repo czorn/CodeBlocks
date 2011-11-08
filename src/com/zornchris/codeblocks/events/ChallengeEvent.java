@@ -20,6 +20,7 @@ public class ChallengeEvent extends Event implements Cancellable {
 	@Override
 	public boolean isCancelled() { return cancelled; }
 	
+	public Challenge getChallenge() { return challenge; }
 	//public String getText() { return text; }
     //public void setText(String text) { this.text = text; }
 }

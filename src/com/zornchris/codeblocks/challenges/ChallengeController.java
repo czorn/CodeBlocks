@@ -16,9 +16,9 @@ public class ChallengeController {
 	    plugin = p;
 	}
 	
-	public void createChallenge(Block b, String[] lines) {
+	public void createChallenge(Block b, String[] lines, Player p) {
 		if(isChallengeSign(lines[0])) {
-		    Challenge c = new TextBasedChallenge(plugin, b, lines[1], lines[2]);
+		    Challenge c = new TextBasedChallenge(plugin, p, b, lines[1], lines[2]);
 			challenges.put(b, c);
 			if(lines[2].length() > 0)
 			    plugin.linkChallengeAndProgram(c, new TextProgram(plugin, c.startBlock, lines[2], c));
@@ -30,7 +30,7 @@ public class ChallengeController {
 	public void resetChallenge(Block b, String[] lines, Player p) {
 		Challenge c = challenges.get(b);
 		if(c == null)
-			createChallenge(b, lines);
+			createChallenge(b, lines, p);
 		else
 			c.reset();
 	}
