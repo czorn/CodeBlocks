@@ -1,4 +1,4 @@
-package com.zornchris.codeblocks.robot;
+package com.zornchris.codeblocks.program;
 
 import java.util.HashMap;
 
@@ -23,18 +23,22 @@ public class ProgramController {
         
         if(p == null) {
             if(isTextProgramStartBlock(start)) {
-                System.out.println("Textprog");
                 Block b = start.getRelative(BlockFace.UP);
                 
                 
                 if( b.getType() == Material.SIGN_POST ) {
                     Sign sign = (Sign) b.getState();
+                    String file = sign.getLine(0).trim();
+                    System.out.println(file);
                     
-                    p = new TextProgram(plugin, start, sign.getLine(0), null);
+                    file = TextProgram.formatFileName(file, player);
+                    
+                    p = new TextProgram(plugin, start, file, null, player);
                 }
             }
-            else
+            else {
                 p = new Program(plugin, start, null);
+            }
             addNewProgram(start, p);
         }
         
@@ -42,7 +46,10 @@ public class ProgramController {
     }
     
     public void addNewProgram(Block start, Program p) {
-        //System.out.println(start.getLocation());
+        Program old = getProgram(start);
+        if(old != null)
+            old.stop();
+        
         programs.put(start, p);
     }
 
@@ -67,6 +74,14 @@ public class ProgramController {
     public static boolean isTextProgramStartBlock(Block b)
     {
         return b.getType() == Material.DIAMOND_BLOCK;
+    }
+
+    public void removeProgram(Block b) {
+        Program p = programs.get(b);
+        if(p != null) {
+            p.stop();
+            programs.remove(b);
+        }
     }
     
 }

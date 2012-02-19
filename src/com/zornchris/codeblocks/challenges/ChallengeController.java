@@ -5,8 +5,8 @@ import java.util.HashMap;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import com.zornchris.codeblocks.CodeBlocksPlugin;
-import com.zornchris.codeblocks.robot.Program;
-import com.zornchris.codeblocks.robot.TextProgram;
+import com.zornchris.codeblocks.program.Program;
+import com.zornchris.codeblocks.program.TextProgram;
 
 public class ChallengeController {
     private CodeBlocksPlugin plugin;
@@ -17,11 +17,15 @@ public class ChallengeController {
 	}
 	
 	public void createChallenge(Block b, String[] lines, Player p) {
-		if(isChallengeSign(lines[0])) {
+		if(ChallengeController.isChallengeSign(lines[0])) {
 		    Challenge c = new TextBasedChallenge(plugin, p, b, lines[1], lines[2]);
 			challenges.put(b, c);
-			if(lines[2].length() > 0)
-			    plugin.linkChallengeAndProgram(c, new TextProgram(plugin, c.startBlock, lines[2], c));
+			
+			if(lines[2].length() > 0) {
+			    String fileName = TextProgram.formatFileName(lines[1].trim(), p);
+			    System.out.println(fileName);
+			    plugin.linkChallengeAndProgram(c, new TextProgram(plugin, c.startBlock, fileName, c, p));
+			}
 			else
 			    plugin.linkChallengeAndProgram(c, new Program(plugin, c.startBlock, c));
 		}
@@ -33,6 +37,8 @@ public class ChallengeController {
 			createChallenge(b, lines, p);
 		else
 			c.reset();
+		
+		plugin.linkChallengeAndProgram(c, c.getProgram());
 	}
 	
 	public void removeChallenge(Block b) {
@@ -40,6 +46,7 @@ public class ChallengeController {
 	}
 	
 	public static boolean isChallengeSign(String line0) {
+	    line0 = line0.trim();
 		return line0.equalsIgnoreCase("challenge");
 	}
 }

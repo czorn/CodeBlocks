@@ -13,9 +13,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import com.zornchris.codeblocks.events.ChallengeLoadEvent;
-import com.zornchris.codeblocks.robot.Program;
-import com.zornchris.codeblocks.robot.Robot;
-import com.zornchris.codeblocks.robot.TextProgram;
+import com.zornchris.codeblocks.program.Program;
+import com.zornchris.codeblocks.program.Robot;
+import com.zornchris.codeblocks.program.TextProgram;
 
 public class TextBasedChallenge extends Challenge {
 	
@@ -41,7 +41,7 @@ public class TextBasedChallenge extends Challenge {
 		if(fileName.length() > 0)
 		    startBlock = TextProgram.createStartBlock(sign.getRelative(BlockFace.SOUTH)
                     .getRelative(BlockFace.SOUTH).getRelative(BlockFace.EAST)
-                    .getRelative(BlockFace.EAST), fileName);
+                    .getRelative(BlockFace.EAST), name);
 		else
     		startBlock = Program.createStartBlock(sign.getRelative(BlockFace.SOUTH)
                     .getRelative(BlockFace.SOUTH).getRelative(BlockFace.EAST)
@@ -202,6 +202,14 @@ public class TextBasedChallenge extends Challenge {
 	    
 		generateBlocks(blockLocations);
 	}
+	
+	@Override
+	public String getDescription() {
+	    return name;
+	}
+	
+	@Override
+    public String getName() { return name; }
 	
 	private class Goal {
 	    public int type;

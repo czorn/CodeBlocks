@@ -3,7 +3,7 @@ package com.zornchris.codeblocks.events;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 
-import com.zornchris.codeblocks.robot.Program;
+import com.zornchris.codeblocks.program.Program;
 
 public class RobotEvent extends Event implements Cancellable {
 	protected static final long serialVersionUID = 1L;

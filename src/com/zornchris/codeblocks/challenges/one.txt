@@ -1,7 +1,0 @@
-moveto z
-u
-xxxxx
-xxzgx
-xxxxx
-xrxxx
-xxxxx

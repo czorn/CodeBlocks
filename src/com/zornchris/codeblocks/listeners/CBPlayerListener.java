@@ -1,4 +1,4 @@
-package com.zornchris.codeblocks;
+package com.zornchris.codeblocks.listeners;
 // 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -9,9 +9,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.material.Button;
 import org.bukkit.material.Lever;
+
+import com.zornchris.codeblocks.CodeBlocksPlugin;
 import com.zornchris.codeblocks.challenges.ChallengeController;
-import com.zornchris.codeblocks.robot.Program;
-import com.zornchris.codeblocks.robot.ProgramController;
+import com.zornchris.codeblocks.program.Program;
+import com.zornchris.codeblocks.program.ProgramController;
 
 public class CBPlayerListener extends PlayerListener {
     private final CodeBlocksPlugin plugin;
@@ -54,8 +56,9 @@ public class CBPlayerListener extends PlayerListener {
     	    Button button = (Button) (b.getState().getData());
     	    Block buttonIsSittingOn = b.getRelative(button.getAttachedFace());
     	    Program prog = plugin.programController.getProgram(buttonIsSittingOn);
-    	    if(prog != null)
-    	        prog.givePlayerCrops(p);
+    	    if(prog != null) {
+    	        prog.givePlayerItemsCollected(p);
+    	    }
     	}
     	
     	// If the player right clicks any other blocks
@@ -72,7 +75,8 @@ public class CBPlayerListener extends PlayerListener {
     		if(ChallengeController.isChallengeSign(sign.getLine(0))) {
     		    if(p.hasPermission("codeblocks.loadchallenge")) {
     		        plugin.challengeController.resetChallenge(b, sign.getLines(), p);
-    		        p.sendMessage("[CodeBlocks] Reset Challenge");
+    		        
+    		        p.sendMessage("[CodeBlocks] Challenge Reset");
     		    }
     		}
     	}

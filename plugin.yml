@@ -1,18 +1,9 @@
 name: CodeBlocks
 main: com.zornchris.codeblocks.CodeBlocksPlugin
-version: 0.06
+version: 0.07
 depend: [Spout]
 
 commands:
     cblocks:
         description: Interact with CodeBlocks
-        permissions: codeblocks.cb
-        usage: /cblocks [command]
-
-permissions:
-    codeblocks.loadchallenge:
-        description: Allows you to load challenges using signs
-        default: op
-    codeblocks.run:
-        description: Allows you to run programs
-        default: op
+        usage: /cblocks

@@ -8,8 +8,8 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.material.Lever;
 
-import com.zornchris.codeblocks.robot.Program;
-import com.zornchris.codeblocks.robot.Robot;
+import com.zornchris.codeblocks.program.Program;
+import com.zornchris.codeblocks.program.Robot;
 
 public class Challenge {
     
@@ -19,7 +19,7 @@ public class Challenge {
     protected Block robotGoalLocation;
     protected ArrayList<Block> blocksToDestroy = new ArrayList<Block>();
     protected Player player;
-    public Program program;
+    protected Program program;
 
 	public Challenge() {}
 	
@@ -29,4 +29,8 @@ public class Challenge {
 	public Block getRobotStartLocation() { return robotStartLocation; }
 	public Block getStartBlock() { return startBlock; }
 	public Player getPlayer() { return player; }
+	public String getDescription() { return ""; }
+	public Program getProgram() { return program; }
+	public void setProgram(Program p) { program = p; }
+	public String getName() { return null; }
 }

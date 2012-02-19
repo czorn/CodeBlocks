@@ -1,6 +1,8 @@
-package com.zornchris.codeblocks.robot;
+package com.zornchris.codeblocks.program;
 //
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Stack;
 
 import org.bukkit.DyeColor;
@@ -16,6 +18,9 @@ import org.bukkit.event.Event.Type;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Lever;
 import org.bukkit.plugin.Plugin;
+import org.getspout.spoutapi.block.SpoutBlock;
+import org.getspout.spoutapi.material.block.GenericBlock;
+
 import com.zornchris.codeblocks.challenges.Challenge;
 import com.zornchris.codeblocks.events.ChallengeCompleteEvent;
 import com.zornchris.codeblocks.events.RobotExplodeEvent;
@@ -70,6 +75,10 @@ public class Program
 	public static byte POS_BRANCH_DATA = DyeColor.CYAN.getData();
 	public static byte NEG_BRANCH_DATA = DyeColor.ORANGE.getData();
 	public static byte ROBOT_START_DATA = DyeColor.SILVER.getData();
+	public static byte MINE_BELOW_DATA = DyeColor.BLUE.getData();
+	public static byte MINE_AHEAD_DATA = DyeColor.LIGHT_BLUE.getData();
+	public static byte PICK_UP_BLOCK_DATA = DyeColor.MAGENTA.getData();
+	public static byte PLACE_BLOCK_DATA = DyeColor.PURPLE.getData();
 	
 	
 	private HashMap<String, FuncBlock> functionBlocks;	// Key = Material Types as a String, Value = Struct containing blocks
@@ -282,6 +291,20 @@ public class Program
 		else if(b.getData() == HARVEST_DATA) {
             robot.harvest();
         }
+		else if(b.getData() == MINE_BELOW_DATA) {
+            robot.mineBelow();
+        }
+		else if(b.getData() == MINE_AHEAD_DATA) {
+            robot.mineAhead();
+        }
+		else if(b.getData() == PICK_UP_BLOCK_DATA) {
+		    System.out.println("pickup");
+            robot.pickUpBlock();
+        }
+		else if(b.getData() == PLACE_BLOCK_DATA) {
+		    System.out.println("place");
+            robot.placeBlock();
+        }
 		else if(b.getData() == BRANCH_DATA){
 			// If we're branching, moving the program counter requires
 			// extra work
@@ -303,6 +326,8 @@ public class Program
 		    	taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, task, speed);
 			return;
 		}
+		
+		robot.succumbToGravity();
 		
 		incrementProgramCounter();
 		if(isRunning)
@@ -393,6 +418,26 @@ public class Program
 		}
 	}
 	
+	public static void removeBranchingBlock(Block b)
+    {
+        if( b.getData() == DyeColor.YELLOW.getData() ) {
+            
+            Block ifBlock = b.getRelative(BlockFace.SOUTH)
+                .getRelative(BlockFace.DOWN);
+            ifBlock.setType(Material.GRASS);
+            
+            ifBlock = ifBlock.getRelative(BlockFace.SOUTH);
+            ifBlock.setType(Material.GRASS);
+            
+            Block elseBlock = b.getRelative(BlockFace.EAST)
+                .getRelative(BlockFace.DOWN);
+            elseBlock.setType(Material.GRASS);
+            
+            elseBlock = elseBlock.getRelative(BlockFace.SOUTH);
+            elseBlock.setType(Material.GRASS);
+        }
+    }
+	
 	/**
 	 * Prototype the function blocks.
 	 * Look at the blocks to the west of the start block, or
@@ -431,6 +476,9 @@ public class Program
 	public static int getCodeBlockType(Block b)
 	{
 		//Block below = b.getRelative(BlockFace.DOWN);
+	    System.out.println(b.getType() + " " + b.getClass());
+	    SpoutBlock x = (SpoutBlock)b;
+	    System.out.println(x.getName());
 		
 		if( b.getType() == Material.WOOL)
 			return INSTRUCTION_BLOCK;
@@ -468,14 +516,22 @@ public class Program
         }
 	}
 	
-	public void givePlayerCrops(Player p) {
-        int numWheat = robot.popWheat();
-        p.sendMessage("[CodeBlocks] This robot has harvested " + numWheat + " wheat(s) for you.");
-        if(numWheat > 0)
-            p.getInventory().addItem(new ItemStack(Material.WHEAT, numWheat));        
+	public void givePlayerItemsCollected(Player p) {
+        HashMap<Material, Integer> itemMap = robot.getItemsCollected();
+        
+        for (Map.Entry<Material, Integer> entry : itemMap.entrySet()) {
+            Material itemType = (Material)entry.getKey();
+            int numItem = (Integer)entry.getValue();
+            
+            System.out.println(itemType + " - " + numItem);
+            p.sendMessage("[CodeBlocks] This robot has collected " + numItem + " " + itemType + "(s)");
+            p.getInventory().addItem(new ItemStack(itemType, numItem));       
+        }
+        p.updateInventory();
+        robot.clearItemsCollected();
     }
 	
-	private void setLeverState(boolean state) {
+	public void setLeverState(boolean state) {
 	    
 	    Block l = null;
 	    int i;
@@ -598,6 +654,11 @@ public class Program
     			stop();
     		}
     	}
+    }
+
+    public String getDescription() {
+        // TODO Auto-generated method stub
+        return "";
     }
     
 }

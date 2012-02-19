@@ -17,13 +17,19 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
+import org.getspout.spoutapi.inventory.SpoutItemStack;
 
 import ru.tehkode.permissions.bukkit.PermissionsEx;
 
+
+import com.zornchris.codeblocks.blocks.VariableBlock;
 import com.zornchris.codeblocks.challenges.Challenge;
 import com.zornchris.codeblocks.challenges.ChallengeController;
-import com.zornchris.codeblocks.robot.Program;
-import com.zornchris.codeblocks.robot.ProgramController;
+import com.zornchris.codeblocks.listeners.CBBlockListener;
+import com.zornchris.codeblocks.listeners.CBCustomListener;
+import com.zornchris.codeblocks.listeners.CBPlayerListener;
+import com.zornchris.codeblocks.program.Program;
+import com.zornchris.codeblocks.program.ProgramController;
 
 public class CodeBlocksPlugin extends JavaPlugin {
     private CBPlayerListener playerListener;
@@ -33,6 +39,8 @@ public class CodeBlocksPlugin extends JavaPlugin {
     public ChallengeController challengeController;
     public ProgramController programController;
     public DBHelper dbh;
+    
+    public static VariableBlock vb;
 
     public void onDisable() {
        System.out.println("[CodeBlocks] Plugin Disabled");
@@ -58,12 +66,14 @@ public class CodeBlocksPlugin extends JavaPlugin {
         
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println( "[CodeBlocks] " + pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!" );
+        
+        vb = new VariableBlock(this);
     }
     
     public void linkChallengeAndProgram(Challenge c, Program p) {
         //System.out.println("Linking Program & Challenge");
         p.challenge = c;
-        c.program = p;
+        c.setProgram(p);
         programController.addNewProgram(c.getStartBlock(), p);
     }
     
@@ -75,31 +85,41 @@ public class CodeBlocksPlugin extends JavaPlugin {
                 String playerName = p.getName();
                 String worldName = "CBTutorial_" + playerName;
                 
-                p.sendMessage("[CodeBlocks] Duplicating Tutorial World...");
-                CodeBlocksPlugin.duplicateWorldFiles("CBTutorial", worldName);
-                
-                p.setOp(true);
-                
-                p.sendMessage("[CodeBlocks] Importing Tutorial World...");
-                p.sendMessage("[CodeBlocks] Joining Tutorial World...");
-                CodeBlocksPlugin.importAndTeleportToWorld(p, worldName, "NORMAL");
-                p.performCommand("mv modify set monsters false CBTutorial_" + playerName);
-                p.performCommand("pex world " + worldName + " inherit CBTutorial");
-                
-                p.setOp(false);
+                joinTutorialWorld(p, playerName, "CBTutorial", worldName);
             }
-            
-            /*if(args.length > 0 && args[0].equalsIgnoreCase("wheat")) {
-                Block lookingAt = p.getTargetBlock(null, 100);
-                Program prog = programController.getProgram(lookingAt);
-                if(prog != null)
-                    prog.givePlayerCrops(p);
-            }*/
+            else if(args.length > 0 && args[0].equalsIgnoreCase("load")) {
+                String playerName = p.getName();
+                String worldName = "CBTutorialText_" + playerName;
+                
+                joinTutorialWorld(p, playerName, "CBTutorialText", worldName);
+            }
+            else if(args.length > 0 && args[0].equalsIgnoreCase("vb")) {
+                Player player = (Player) sender;
+                player.getInventory().addItem(new SpoutItemStack(vb, 1));
+            }
             
             return true;
         }
         
         return false;
+    }
+    
+    private void joinTutorialWorld(Player p, String playerName, String fromWorld, String worldName) {
+        p.sendMessage("[CodeBlocks] Duplicating Tutorial World...");
+        CodeBlocksPlugin.duplicateWorldFiles(fromWorld, worldName);
+        
+        p.setOp(true);
+        
+        p.sendMessage("[CodeBlocks] Importing Tutorial World...");
+        p.sendMessage("[CodeBlocks] Joining Tutorial World...");
+        CodeBlocksPlugin.importAndTeleportToWorld(p, worldName, "NORMAL");
+        p.performCommand("mv modify set monsters false " + worldName);
+        p.performCommand("mv modify set animals false " + worldName);
+        p.performCommand("pex world " + worldName + " inherit CBTutorial");
+        p.performCommand("mvm set mode creative");
+        p.performCommand("gamemode " + playerName + " 1");
+        
+        p.setOp(false);
     }
     
     //http://www.unix.com/shell-programming-scripting/13932-execute-command-unix-java-possible-not.html

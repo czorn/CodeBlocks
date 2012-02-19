@@ -1,13 +1,16 @@
-package com.zornchris.codeblocks;
+package com.zornchris.codeblocks.listeners;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
-import com.zornchris.codeblocks.robot.Program;
+
+import com.zornchris.codeblocks.CodeBlocksPlugin;
+import com.zornchris.codeblocks.program.Program;
 
 public class CBBlockListener extends BlockListener {
 
@@ -37,7 +40,11 @@ public class CBBlockListener extends BlockListener {
 	@Override
 	public void onBlockBreak(BlockBreakEvent event) {
 		Block b = event.getBlock();
-		if(b.getType() == Material.SIGN_POST)
+		if(b.getType() == Material.SIGN_POST) {
 			plugin.challengeController.removeChallenge(b);
+			plugin.programController.removeProgram(b.getRelative(BlockFace.DOWN));
+		}
+		else if(b.getType() == Material.WOOL)
+		    Program.removeBranchingBlock(b);
 	}
 }

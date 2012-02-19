@@ -1,12 +1,13 @@
-package com.zornchris.codeblocks;
+package com.zornchris.codeblocks.listeners;
 
 import org.bukkit.event.CustomEventListener;
 import org.bukkit.event.Event;
 
+import com.zornchris.codeblocks.CodeBlocksPlugin;
 import com.zornchris.codeblocks.challenges.Challenge;
 import com.zornchris.codeblocks.events.ChallengeEvent;
 import com.zornchris.codeblocks.events.RobotEvent;
-import com.zornchris.codeblocks.robot.Program;
+import com.zornchris.codeblocks.program.Program;
 
 public class CBCustomListener extends CustomEventListener{
     private CodeBlocksPlugin plugin;
@@ -19,22 +20,38 @@ public class CBCustomListener extends CustomEventListener{
     public void onCustomEvent(Event event) {
         String playerName;
         String eventType;
+        String challengeDescr;
+        String progDescr;
+        Challenge c;
+        Program prog;
         
         if(event instanceof RobotEvent) {
             RobotEvent re = (RobotEvent) event;
-            Program prog = re.getProgram();
+            prog = re.getProgram();
             playerName = prog.getPlayer().getName();
+            c = prog.challenge;
             eventType = re.getEventName();
         }
         else if(event instanceof ChallengeEvent) {
             ChallengeEvent ce = (ChallengeEvent) event;
-            Challenge c = ce.getChallenge();
+            c = ce.getChallenge();
             playerName = c.getPlayer().getName();
             eventType = ce.getEventName();
+            prog = c.getProgram();
         }
         else
             return;            
             
-        plugin.dbh.logEvent(playerName, eventType);
+        if(c == null)
+            challengeDescr = "No Challenge";
+        else
+            challengeDescr = c.getDescription();
+        
+        if(prog == null)
+            progDescr = "";
+        else
+            progDescr = prog.getDescription();
+        
+        plugin.dbh.logEvent(playerName, eventType, challengeDescr, progDescr);
     }
 }

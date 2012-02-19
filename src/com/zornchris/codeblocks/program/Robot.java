@@ -1,6 +1,8 @@
-package com.zornchris.codeblocks.robot;
+package com.zornchris.codeblocks.program;
 
+import java.util.HashMap;
 import java.util.Random;
+import java.util.Stack;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -20,6 +22,8 @@ public class Robot {
 							// facing direction
 	private int facingDirIndex;
 	private int wheatHarvested = 0;
+	private HashMap<Material, Integer> itemsCollected = new HashMap<Material, Integer>();
+	private Stack<Material> blocksPickedUp = new Stack<Material>();
 	
 	public static final Material ROBOT_MATERIAL = Material.DISPENSER;
 	public static final Material ROBOT_DIRECTION_MATERIAL = Material.SIGN_POST;
@@ -139,6 +143,9 @@ public class Robot {
 			inFront.setType(Material.AIR);
 	}
 	
+	/**
+	 * Gets wheat from crop and replants the crop
+	 */
 	public void harvest() {
 	    Block inFront = getBlockInFront();
 	    // If the block is growing wheat
@@ -147,20 +154,91 @@ public class Robot {
 	        if(inFront.getData() == (byte) 7) {
 	            inFront.setData((byte) 0);
 	            
-	            // Harvest 1-3 wheat
-	            Random rand = new Random();
-	            wheatHarvested += rand.nextInt(3) + 1;
+	            Object x = itemsCollected.get(Material.WHEAT);
+                int wheatHarvested = (x == null) ? 1 : ((Integer) x);
+                
+                // Harvest 1-3 wheat
+                Random rand = new Random();
+                wheatHarvested += rand.nextInt(3) + 1;
+                
+                itemsCollected.put(Material.WHEAT, wheatHarvested);
 	        }
 	    }
 	    //updateCropsInDispenser();
+	}
+	
+	/**
+	 * Picks up the block in front of the robot
+	 */
+	public void pickUpBlock() {
+	    Block inFront = this.getBlockInFront();
+	    if(inFront.getType() != Material.AIR) {
+    	    blocksPickedUp.add(inFront.getType());
+    	    inFront.setType(Material.AIR);
+	    }
+	}
+	
+	public void placeBlock() {
+	    Block inFront = this.getBlockInFront();
+	    if(inFront.getType() == Material.AIR && blocksPickedUp.size() > 0) {
+	        inFront.setType(blocksPickedUp.pop());
+	    }
+	}
+	
+	/**
+	 * Mines and holds onto the block below the robot,
+	 * the robot then falls into the hole
+	 */
+	public void mineBelow() {
+	    mineBlock(getBlockBelow());
+        //succumbToGravity();
+	}
+	
+	/**
+	 * 
+	 */
+	public void mineAhead() {
+	    mineBlock(getBlockInFront());
 	}
 	
 /**************************
  * SHORT HELPER FUNCTIONS *
  **************************/
 	
+	/**
+	 * Mines and saves the block
+	 */
+	public void mineBlock(Block b) {
+	    Material mat = b.getType();
+	    
+	    if(mat != Material.BEDROCK && mat != Material.AIR) {
+    	    Object x = itemsCollected.get(mat);
+            int numMined = (x == null) ? 1 : ((Integer) x) + 1;
+            itemsCollected.put(mat, numMined);
+            b.setType(Material.AIR);
+	    }
+	}
+	
+	/**
+	 * If the robot is floating, place the robot
+	 * on top of the next block below it
+	 */
+	public void succumbToGravity() {
+	    Block below = getBlockBelow();
+	    while(below.getType() == Material.AIR) {
+	        below = below.getRelative(BlockFace.DOWN);
+	    }
+	    
+	    clear();
+	    moveTo(below.getRelative(BlockFace.UP));
+	}
+	
 	public Block getBlockInFront() {
 	    return robot.getRelative(Program.BLOCKFACE_DIRS[facingDirIndex]);
+	}
+	
+	public Block getBlockBelow() {
+	    return robot.getRelative(BlockFace.DOWN);
 	}
 	
 	/**
@@ -176,7 +254,7 @@ public class Robot {
 	 * @param newLocation
 	 */
 	public void moveTo(Block newLocation) {
-		robot = newLocation;
+	    robot = newLocation;
 		robot.setType(ROBOT_MATERIAL);
 		robot.setData(Program.BYTE_DIRS[facingDirIndex]);
 		updateSign();
@@ -235,6 +313,17 @@ public class Robot {
 	public void reset() {
 	    clear();
 	    facingDirIndex = 1;
+	    this.blocksPickedUp.clear();
 	}
+
+
+
+    public void clearItemsCollected() {
+        itemsCollected = new HashMap<Material, Integer>();
+    }
+
+
+
+    public HashMap<Material, Integer> getItemsCollected() { return itemsCollected; }
 	
 }
